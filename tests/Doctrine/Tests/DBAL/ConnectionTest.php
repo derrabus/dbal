@@ -2,7 +2,7 @@
 
 namespace Doctrine\Tests\DBAL;
 
-use Doctrine\Common\Cache\Cache;
+use Cache\Adapter\Common\CacheItem;
 use Doctrine\Common\EventManager;
 use Doctrine\DBAL\Cache\ArrayStatement;
 use Doctrine\DBAL\Cache\QueryCacheProfile;
@@ -26,6 +26,7 @@ use Doctrine\DBAL\VersionAwarePlatformDriver;
 use Doctrine\Tests\DbalTestCase;
 use Exception;
 use PHPUnit\Framework\MockObject\MockObject;
+use Psr\Cache\CacheItemPoolInterface;
 use stdClass;
 use function call_user_func_array;
 
@@ -802,13 +803,13 @@ class ConnectionTest extends DbalTestCase
 
     public function testConnectionParamsArePassedToTheQueryCacheProfileInExecuteCacheQuery() : void
     {
-        $resultCacheDriverMock = $this->createMock(Cache::class);
+        $resultCacheMock = $this->createMock(CacheItemPoolInterface::class);
 
-        $resultCacheDriverMock
+        $resultCacheMock
             ->expects($this->atLeastOnce())
-            ->method('fetch')
+            ->method('getItem')
             ->with('cacheKey')
-            ->will($this->returnValue(['realKey' => []]));
+            ->will($this->returnValue(new CacheItem('cacheKey', true, ['realKey' => []])));
 
         $query  = 'SELECT * FROM foo WHERE bar = ?';
         $params = [666];
@@ -819,8 +820,8 @@ class ConnectionTest extends DbalTestCase
 
         $queryCacheProfileMock
             ->expects($this->any())
-            ->method('getResultCacheDriver')
-            ->will($this->returnValue($resultCacheDriverMock));
+            ->method('getResultCache')
+            ->will($this->returnValue($resultCacheMock));
 
         // This is our main expectation
         $queryCacheProfileMock
@@ -843,21 +844,21 @@ class ConnectionTest extends DbalTestCase
      */
     public function testShouldNotPassPlatformInParamsToTheQueryCacheProfileInExecuteCacheQuery() : void
     {
-        $resultCacheDriverMock = $this->createMock(Cache::class);
+        $resultCacheMock = $this->createMock(CacheItemPoolInterface::class);
 
-        $resultCacheDriverMock
+        $resultCacheMock
             ->expects($this->atLeastOnce())
-            ->method('fetch')
+            ->method('getItem')
             ->with('cacheKey')
-            ->will($this->returnValue(['realKey' => []]));
+            ->will($this->returnValue(new CacheItem('cacheKey', true, ['realKey' => []])));
 
         /** @var QueryCacheProfile|MockObject $queryCacheProfileMock */
         $queryCacheProfileMock = $this->createMock(QueryCacheProfile::class);
 
         $queryCacheProfileMock
             ->expects($this->any())
-            ->method('getResultCacheDriver')
-            ->will($this->returnValue($resultCacheDriverMock));
+            ->method('getResultCache')
+            ->will($this->returnValue($resultCacheMock));
 
         $query = 'SELECT 1';
 
@@ -932,19 +933,19 @@ class ConnectionTest extends DbalTestCase
         /** @var QueryCacheProfile|MockObject $queryCacheProfile */
         $queryCacheProfile = $this->createMock(QueryCacheProfile::class);
 
-        /** @var Cache|MockObject $resultCacheDriver */
-        $resultCacheDriver = $this->createMock(Cache::class);
+        /** @var CacheItemPoolInterface|MockObject $resultCache */
+        $resultCache = $this->createMock(CacheItemPoolInterface::class);
 
         $queryCacheProfile
             ->expects($this->any())
-            ->method('getResultCacheDriver')
-            ->will($this->returnValue($resultCacheDriver));
+            ->method('getResultCache')
+            ->will($this->returnValue($resultCache));
 
-        $resultCacheDriver
+        $resultCache
             ->expects($this->atLeastOnce())
-            ->method('fetch')
+            ->method('getItem')
             ->with('cacheKey')
-            ->will($this->returnValue(['realKey' => []]));
+            ->will($this->returnValue(new CacheItem('cacheKey', true, ['realKey' => []])));
 
         $query = 'SELECT 1';
 

@@ -2,10 +2,18 @@
 
 namespace Doctrine\DBAL\Cache;
 
+use BadMethodCallException;
+use Cache\Adapter\Doctrine\DoctrineCachePool;
 use Doctrine\Common\Cache\Cache;
+use Psr\Cache\CacheItemPoolInterface;
+use TypeError;
+use const E_USER_DEPRECATED;
+use function get_class;
 use function hash;
 use function serialize;
 use function sha1;
+use function sprintf;
+use function trigger_error;
 
 /**
  * Query Cache Profile handles the data relevant for query caching.
@@ -14,8 +22,8 @@ use function sha1;
  */
 class QueryCacheProfile
 {
-    /** @var Cache|null */
-    private $resultCacheDriver;
+    /** @var CacheItemPoolInterface|null */
+    private $resultCache;
 
     /** @var int */
     private $lifetime = 0;
@@ -24,14 +32,23 @@ class QueryCacheProfile
     private $cacheKey;
 
     /**
-     * @param int         $lifetime
-     * @param string|null $cacheKey
+     * @param int                    $lifetime
+     * @param CacheItemPoolInterface $resultCache
      */
-    public function __construct($lifetime = 0, $cacheKey = null, ?Cache $resultCache = null)
+    public function __construct($lifetime = 0, ?string $cacheKey = null, ?object $resultCache = null)
     {
-        $this->lifetime          = $lifetime;
-        $this->cacheKey          = $cacheKey;
-        $this->resultCacheDriver = $resultCache;
+        $this->lifetime = $lifetime;
+        $this->cacheKey = $cacheKey;
+
+        if ($resultCache instanceof Cache) {
+            @trigger_error(sprintf('Using an instance of %s as result cache is deprecated. Please provide a PSR-6 cache instead.', Cache::class), E_USER_DEPRECATED);
+
+            $resultCache = new DoctrineCachePool($resultCache);
+        } elseif ($resultCache !== null && ! $resultCache instanceof CacheItemPoolInterface) {
+            throw new TypeError(sprintf('Expected $resultCache to be an instance of %s or null, got %s.', CacheItemPoolInterface::class, get_class($resultCache)));
+        }
+
+        $this->resultCache = $resultCache;
     }
 
     /**
@@ -39,7 +56,21 @@ class QueryCacheProfile
      */
     public function getResultCacheDriver()
     {
-        return $this->resultCacheDriver;
+        @trigger_error(sprintf('%s is deprecated. Use getResultCache() instead.', __METHOD__), E_USER_DEPRECATED);
+
+        if ($this->resultCache === null) {
+            return null;
+        }
+        if (! $this->resultCache instanceof DoctrineCachePool) {
+            throw new BadMethodCallException('FIXME');
+        }
+
+        return $this->resultCache->getCache();
+    }
+
+    public function getResultCache() : ?CacheItemPoolInterface
+    {
+        return $this->resultCache;
     }
 
     /**
@@ -96,6 +127,13 @@ class QueryCacheProfile
      */
     public function setResultCacheDriver(Cache $cache)
     {
+        @trigger_error(sprintf('%s is deprecated. Use setResultCache() instead.', __METHOD__), E_USER_DEPRECATED);
+
+        return $this->setResultCache(new DoctrineCachePool($cache));
+    }
+
+    public function setResultCache(CacheItemPoolInterface $cache) : self
+    {
         return new QueryCacheProfile($this->lifetime, $this->cacheKey, $cache);
     }
 
@@ -106,7 +144,7 @@ class QueryCacheProfile
      */
     public function setCacheKey($cacheKey)
     {
-        return new QueryCacheProfile($this->lifetime, $cacheKey, $this->resultCacheDriver);
+        return new QueryCacheProfile($this->lifetime, $cacheKey, $this->resultCache);
     }
 
     /**
@@ -116,6 +154,6 @@ class QueryCacheProfile
      */
     public function setLifetime($lifetime)
     {
-        return new QueryCacheProfile($lifetime, $this->cacheKey, $this->resultCacheDriver);
+        return new QueryCacheProfile($lifetime, $this->cacheKey, $this->resultCache);
     }
 }

@@ -2,10 +2,16 @@
 
 namespace Doctrine\DBAL;
 
+use BadMethodCallException;
+use Cache\Adapter\Doctrine\DoctrineCachePool;
 use Doctrine\Common\Cache\Cache;
 use Doctrine\DBAL\Logging\SQLLogger;
 use Doctrine\DBAL\Schema\AbstractAsset;
+use Psr\Cache\CacheItemPoolInterface;
+use const E_USER_DEPRECATED;
 use function preg_match;
+use function sprintf;
+use function trigger_error;
 
 /**
  * Configuration container for the Doctrine DBAL.
@@ -50,6 +56,12 @@ class Configuration
      */
     public function getResultCacheImpl()
     {
+        @trigger_error(sprintf('%s is deprecated. Use getResultCache() instead.', __METHOD__), E_USER_DEPRECATED);
+
+        if (! isset($this->_attributes['resultCacheImpl']) && isset($this->_attributes['resultCache'])) {
+            throw new BadMethodCallException('FIXME');
+        }
+
         return $this->_attributes['resultCacheImpl'] ?? null;
     }
 
@@ -60,7 +72,26 @@ class Configuration
      */
     public function setResultCacheImpl(Cache $cacheImpl)
     {
-        $this->_attributes['resultCacheImpl'] = $cacheImpl;
+        @trigger_error(sprintf('%s is deprecated. Use setResultCache() instead.', __METHOD__), E_USER_DEPRECATED);
+
+        $this->setResultCache(new DoctrineCachePool($cacheImpl));
+    }
+
+    /**
+     * Gets the cache driver implementation that is used for query result caching.
+     */
+    public function getResultCache() : ?CacheItemPoolInterface
+    {
+        return $this->_attributes['resultCache'] ?? null;
+    }
+
+    /**
+     * Sets the cache driver implementation that is used for query result caching.
+     */
+    public function setResultCache(CacheItemPoolInterface $cache) : void
+    {
+        $this->_attributes['resultCache']     = $cache;
+        $this->_attributes['resultCacheImpl'] = $cache instanceof DoctrineCachePool ? $cache->getCache() : null;
     }
 
     /**

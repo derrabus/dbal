@@ -3,6 +3,7 @@
 namespace Doctrine\DBAL\Cache;
 
 use ArrayIterator;
+use Cache\Adapter\Doctrine\DoctrineCachePool;
 use Doctrine\Common\Cache\Cache;
 use Doctrine\DBAL\Driver\ResultStatement;
 use Doctrine\DBAL\Driver\Statement;
@@ -10,10 +11,16 @@ use Doctrine\DBAL\FetchMode;
 use InvalidArgumentException;
 use IteratorAggregate;
 use PDO;
+use Psr\Cache\CacheItemPoolInterface;
+use TypeError;
+use const E_USER_DEPRECATED;
 use function array_merge;
 use function array_values;
 use function assert;
+use function get_class;
 use function reset;
+use function sprintf;
+use function trigger_error;
 
 /**
  * Cache statement for SQL results.
@@ -30,7 +37,7 @@ use function reset;
  */
 class ResultCacheStatement implements IteratorAggregate, ResultStatement
 {
-    /** @var Cache */
+    /** @var CacheItemPoolInterface */
     private $resultCache;
 
     /** @var string */
@@ -59,12 +66,21 @@ class ResultCacheStatement implements IteratorAggregate, ResultStatement
     private $defaultFetchMode = FetchMode::MIXED;
 
     /**
-     * @param string $cacheKey
-     * @param string $realKey
-     * @param int    $lifetime
+     * @param CacheItemPoolInterface $resultCache
+     * @param string                 $cacheKey
+     * @param string                 $realKey
+     * @param int                    $lifetime
      */
-    public function __construct(ResultStatement $stmt, Cache $resultCache, $cacheKey, $realKey, $lifetime)
+    public function __construct(ResultStatement $stmt, object $resultCache, $cacheKey, $realKey, $lifetime)
     {
+        if ($resultCache instanceof Cache) {
+            @trigger_error(sprintf('Using an instance of %s as result cache is deprecated. Please provide a PSR-6 cache instead.', Cache::class), E_USER_DEPRECATED);
+
+            $resultCache = new DoctrineCachePool($resultCache);
+        } elseif (! $resultCache instanceof CacheItemPoolInterface) {
+            throw new TypeError(sprintf('Expected $resultCache to be an instance of %s, got %s.', CacheItemPoolInterface::class, get_class($resultCache)));
+        }
+
         $this->statement   = $stmt;
         $this->resultCache = $resultCache;
         $this->cacheKey    = $cacheKey;
@@ -82,13 +98,14 @@ class ResultCacheStatement implements IteratorAggregate, ResultStatement
             return true;
         }
 
-        $data = $this->resultCache->fetch($this->cacheKey);
-        if (! $data) {
-            $data = [];
-        }
+        $item                 = $this->resultCache->getItem($this->cacheKey);
+        $data                 = $item->isHit() ? $item->get() : [];
         $data[$this->realKey] = $this->data;
 
-        $this->resultCache->save($this->cacheKey, $data, $this->lifetime);
+        $item->set($data);
+        $item->expiresAfter($this->lifetime);
+
+        $this->resultCache->save($item);
         unset($this->data);
 
         return true;
@@ -170,15 +187,18 @@ class ResultCacheStatement implements IteratorAggregate, ResultStatement
         $data = $this->statement->fetchAll($fetchMode, $fetchArgument, $ctorArgs);
 
         if ($fetchMode === FetchMode::COLUMN) {
+            $realData = [];
             foreach ($data as $key => $value) {
-                $data[$key] = [$value];
+                $realData[$key] = [$value];
             }
+            $this->data = $realData;
+        } else {
+            $this->data = $data;
         }
 
-        $this->data    = $data;
         $this->emptied = true;
 
-        return $this->data;
+        return $data;
     }
 
     /**

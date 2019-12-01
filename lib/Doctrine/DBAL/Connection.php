@@ -935,7 +935,7 @@ class Connection implements DriverConnection
      */
     public function executeCacheQuery($query, $params, $types, QueryCacheProfile $qcp)
     {
-        $resultCache = $qcp->getResultCacheDriver() ?? $this->_config->getResultCacheImpl();
+        $resultCache = $qcp->getResultCache() ?? $this->_config->getResultCache();
 
         if ($resultCache === null) {
             throw CacheException::noResultDriverConfigured();
@@ -947,9 +947,10 @@ class Connection implements DriverConnection
         [$cacheKey, $realKey] = $qcp->generateCacheKeys($query, $params, $types, $connectionParams);
 
         // fetch the row pointers entry
-        $data = $resultCache->fetch($cacheKey);
+        $item = $resultCache->getItem($cacheKey);
 
-        if ($data !== false) {
+        if ($item->isHit()) {
+            $data = $item->get();
             // is the real key part of this row pointers map or is the cache only pointing to other cache keys?
             if (isset($data[$realKey])) {
                 $stmt = new ArrayStatement($data[$realKey]);
