@@ -3,7 +3,6 @@
 namespace Doctrine\DBAL\Cache;
 
 use ArrayIterator;
-use Cache\Adapter\Doctrine\DoctrineCachePool;
 use Doctrine\Common\Cache\Cache;
 use Doctrine\DBAL\Driver\ResultStatement;
 use Doctrine\DBAL\Driver\Statement;
@@ -12,6 +11,7 @@ use InvalidArgumentException;
 use IteratorAggregate;
 use PDO;
 use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\Cache\Adapter\DoctrineAdapter;
 use TypeError;
 use const E_USER_DEPRECATED;
 use function array_merge;
@@ -76,7 +76,7 @@ class ResultCacheStatement implements IteratorAggregate, ResultStatement
         if ($resultCache instanceof Cache) {
             @trigger_error(sprintf('Using an instance of %s as result cache is deprecated. Please provide a PSR-6 cache instead.', Cache::class), E_USER_DEPRECATED);
 
-            $resultCache = new DoctrineCachePool($resultCache);
+            $resultCache = new DoctrineAdapter($resultCache);
         } elseif (! $resultCache instanceof CacheItemPoolInterface) {
             throw new TypeError(sprintf('Expected $resultCache to be an instance of %s, got %s.', CacheItemPoolInterface::class, get_class($resultCache)));
         }

@@ -3,9 +3,10 @@
 namespace Doctrine\DBAL\Cache;
 
 use BadMethodCallException;
-use Cache\Adapter\Doctrine\DoctrineCachePool;
 use Doctrine\Common\Cache\Cache;
 use Psr\Cache\CacheItemPoolInterface;
+use Symfony\Component\Cache\Adapter\DoctrineAdapter;
+use Symfony\Component\Cache\DoctrineProvider;
 use TypeError;
 use const E_USER_DEPRECATED;
 use function get_class;
@@ -25,6 +26,9 @@ class QueryCacheProfile
     /** @var CacheItemPoolInterface|null */
     private $resultCache;
 
+    /** @var Cache|null */
+    private $resultCacheDriver;
+
     /** @var int */
     private $lifetime = 0;
 
@@ -43,9 +47,12 @@ class QueryCacheProfile
         if ($resultCache instanceof Cache) {
             @trigger_error(sprintf('Using an instance of %s as result cache is deprecated. Please provide a PSR-6 cache instead.', Cache::class), E_USER_DEPRECATED);
 
-            $resultCache = new DoctrineCachePool($resultCache);
+            $resultCache = new DoctrineAdapter($resultCache);
+            $this->resultCacheDriver = $resultCache;
         } elseif ($resultCache !== null && ! $resultCache instanceof CacheItemPoolInterface) {
             throw new TypeError(sprintf('Expected $resultCache to be an instance of %s or null, got %s.', CacheItemPoolInterface::class, get_class($resultCache)));
+        } else {
+            $this->resultCacheDriver = null;
         }
 
         $this->resultCache = $resultCache;
@@ -58,14 +65,15 @@ class QueryCacheProfile
     {
         @trigger_error(sprintf('%s is deprecated. Use getResultCache() instead.', __METHOD__), E_USER_DEPRECATED);
 
+        if ($this->resultCacheDriver !== null) {
+            return $this->resultCacheDriver;
+        }
+
         if ($this->resultCache === null) {
             return null;
         }
-        if (! $this->resultCache instanceof DoctrineCachePool) {
-            throw new BadMethodCallException('FIXME');
-        }
 
-        return $this->resultCache->getCache();
+        return new DoctrineProvider($this->resultCache);
     }
 
     public function getResultCache() : ?CacheItemPoolInterface
@@ -129,7 +137,7 @@ class QueryCacheProfile
     {
         @trigger_error(sprintf('%s is deprecated. Use setResultCache() instead.', __METHOD__), E_USER_DEPRECATED);
 
-        return $this->setResultCache(new DoctrineCachePool($cache));
+        return new QueryCacheProfile($this->lifetime, $this->cacheKey, $cache);
     }
 
     public function setResultCache(CacheItemPoolInterface $cache) : self

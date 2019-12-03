@@ -2,7 +2,6 @@
 
 namespace Doctrine\Tests\DBAL\Functional;
 
-use Cache\Adapter\PHPArray\ArrayCachePool;
 use Doctrine\Common\Cache\ArrayCache;
 use Doctrine\DBAL\Cache\QueryCacheProfile;
 use Doctrine\DBAL\Driver\ResultStatement;
@@ -10,6 +9,7 @@ use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\Logging\DebugStack;
 use Doctrine\DBAL\Schema\Table;
 use Doctrine\Tests\DbalFunctionalTestCase;
+use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use const CASE_LOWER;
 use function array_change_key_case;
 use function array_merge;
@@ -47,7 +47,7 @@ class ResultCacheTest extends DbalFunctionalTestCase
         $config                                = $this->connection->getConfiguration();
         $config->setSQLLogger($this->sqlLogger = new DebugStack());
 
-        $cache = new ArrayCachePool();
+        $cache = new ArrayAdapter();
         $config->setResultCache($cache);
     }
 
@@ -170,7 +170,7 @@ class ResultCacheTest extends DbalFunctionalTestCase
 
     public function testFetchAllAndFinishSavesCache() : void
     {
-        $layerCache = new ArrayCachePool();
+        $layerCache = new ArrayAdapter();
         $stmt       = $this->connection->executeQuery('SELECT * FROM caching WHERE test_int > 500', [], [], new QueryCacheProfile(10, 'testcachekey', $layerCache));
         $stmt->fetchAll();
         $stmt->closeCursor();
@@ -195,7 +195,7 @@ class ResultCacheTest extends DbalFunctionalTestCase
         $query = $this->connection->getDatabasePlatform()
             ->getDummySelectSQL('1');
 
-        $qcp = new QueryCacheProfile(0, 0, new ArrayCachePool());
+        $qcp = new QueryCacheProfile(0, 0, new ArrayAdapter());
 
         $stmt = $this->connection->executeCacheQuery($query, [], [], $qcp);
         self::assertEquals([1], $stmt->fetchAll(FetchMode::COLUMN));
@@ -257,7 +257,7 @@ class ResultCacheTest extends DbalFunctionalTestCase
         $stmt = $this->connection->executeQuery('SELECT * FROM caching WHERE test_int > 500', [], [], new QueryCacheProfile(10, 'emptycachekey'));
         $data = $this->hydrateStmt($stmt);
 
-        $secondCache = new ArrayCachePool();
+        $secondCache = new ArrayAdapter();
         $stmt        = $this->connection->executeQuery('SELECT * FROM caching WHERE test_int > 500', [], [], new QueryCacheProfile(10, 'emptycachekey', $secondCache));
         $data        = $this->hydrateStmt($stmt);
 
