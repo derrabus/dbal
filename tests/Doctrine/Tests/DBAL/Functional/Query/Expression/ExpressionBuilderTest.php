@@ -12,7 +12,12 @@ use Doctrine\Tests\DbalFunctionalTestCase;
 
 final class ExpressionBuilderTest extends DbalFunctionalTestCase
 {
-    public function testSelectStringLiteral(): void
+    /**
+     * @param mixed[] $literalArgs
+     *
+     * @dataProvider provideLiteralArgs
+     */
+    public function testSelectLiteral(array $literalArgs): void
     {
         $platform = $this->connection->getDatabasePlatform();
         if ($platform instanceof DB2Platform) {
@@ -21,7 +26,7 @@ final class ExpressionBuilderTest extends DbalFunctionalTestCase
 
         $qb   = $this->connection->createQueryBuilder();
         $expr = $qb->expr();
-        $qb->select($expr->literal('foo'));
+        $qb->select($expr->literal(...$literalArgs));
 
         if ($platform instanceof OraclePlatform) {
             $qb->from('DUAL');
@@ -30,28 +35,15 @@ final class ExpressionBuilderTest extends DbalFunctionalTestCase
         $result = $qb->execute();
 
         self::assertInstanceOf(Result::class, $result);
-        self::assertSame('foo', $result->fetchOne());
+        self::assertEquals($literalArgs[0], $result->fetchOne());
     }
 
-    public function testSelectIntegerLiteral(): void
+    /**
+     * @return iterable<mixed[]>
+     */
+    public function provideLiteralArgs(): iterable
     {
-        $platform = $this->connection->getDatabasePlatform();
-        if ($platform instanceof DB2Platform) {
-            self::markTestSkipped('DB2 does not support SELECTing literals.');
-        }
-
-        $qb   = $this->connection->createQueryBuilder();
-        $expr = $qb->expr();
-        $qb->select($expr->literal(42, ParameterType::INTEGER));
-
-        $platform = $this->connection->getDatabasePlatform();
-        if ($platform instanceof OraclePlatform) {
-            $qb->from('DUAL');
-        }
-
-        $result = $qb->execute();
-
-        self::assertInstanceOf(Result::class, $result);
-        self::assertEquals(42, $result->fetchOne());
+        yield 'string' => [['foo']];
+        yield 'integer' => [[42, ParameterType::INTEGER]];
     }
 }
