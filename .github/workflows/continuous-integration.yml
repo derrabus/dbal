@@ -40,6 +40,7 @@ jobs:
           - "7.4"
           - "8.0"
           - "8.1"
+          - "8.2"
         dependencies:
           - "highest"
         include:
@@ -111,6 +112,7 @@ jobs:
         php-version:
           - "7.4"
           - "8.1"
+          - "8.2"
         oracle-version:
           - "21"
         include:
@@ -166,6 +168,7 @@ jobs:
         php-version:
           - "7.4"
           - "8.1"
+          - "8.2"
         oracle-version:
           - "21"
         include:
@@ -227,6 +230,8 @@ jobs:
           - "14"
         include:
           - php-version: "8.1"
+            postgres-version: "14"
+          - php-version: "8.2"
             postgres-version: "14"
 
     services:
@@ -294,6 +299,18 @@ jobs:
             mariadb-version: "10.7"
             extension: "mysqli"
           - php-version: "8.1"
+            mariadb-version: "10.7"
+            extension: "pdo_mysql"
+          - php-version: "8.2"
+            mariadb-version: "10.5"
+            extension: "mysqli"
+          - php-version: "8.2"
+            mariadb-version: "10.5"
+            extension: "pdo_mysql"
+          - php-version: "8.2"
+            mariadb-version: "10.7"
+            extension: "mysqli"
+          - php-version: "8.2"
             mariadb-version: "10.7"
             extension: "pdo_mysql"
 
@@ -438,6 +455,7 @@ jobs:
           - "7.3"
           - "7.4"
           - "8.1"
+          - "8.2"
         extension:
           - "sqlsrv"
           - "pdo_sqlsrv"
