@@ -871,7 +871,7 @@ SQL
             return $callback(true);
         }
 
-        throw new UnexpectedValueException("Unrecognized boolean literal '${value}'");
+        throw new UnexpectedValueException(sprintf("Unrecognized boolean literal '%s'", $value));
     }
 
     /**
