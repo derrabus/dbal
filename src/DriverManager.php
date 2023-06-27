@@ -6,6 +6,7 @@ use Doctrine\Common\EventManager;
 use Doctrine\DBAL\Driver\IBMDB2;
 use Doctrine\DBAL\Driver\Mysqli;
 use Doctrine\DBAL\Driver\OCI8;
+use Doctrine\DBAL\Driver\ODBC;
 use Doctrine\DBAL\Driver\PDO;
 use Doctrine\DBAL\Driver\PgSQL;
 use Doctrine\DBAL\Driver\SQLite3;
@@ -84,6 +85,8 @@ final class DriverManager
         'pdo_pgsql'          => PDO\PgSQL\Driver::class,
         'pdo_oci'            => PDO\OCI\Driver::class,
         'oci8'               => OCI8\Driver::class,
+        'odbc'               => ODBC\Driver::class,
+        'odbc_sqlsrv'        => ODBC\SQLServer\Driver::class,
         'ibm_db2'            => IBMDB2\Driver::class,
         'pdo_sqlsrv'         => PDO\SQLSrv\Driver::class,
         'mysqli'             => Mysqli\Driver::class,

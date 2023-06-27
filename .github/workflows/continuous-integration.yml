@@ -12,8 +12,8 @@ on:
       - src/**
       - tests/**
   push:
-    branches:
-      - "*.x"
+#    branches:
+#      - "*.x"
     paths:
       - .github/workflows/continuous-integration.yml
       - ci/**
@@ -473,6 +473,7 @@ jobs:
         extension:
           - "sqlsrv"
           - "pdo_sqlsrv"
+          - "odbc_sqlsrv"
         collation:
           - "Latin1_General_100_CI_AS_SC_UTF8"
         include:
@@ -510,7 +511,7 @@ jobs:
           coverage: "pcov"
           ini-values: "zend.assertions=1"
           tools: "pecl"
-          extensions: "${{ matrix.extension }}-5.10.0beta1"
+          extensions: "sqlsrv pdo_sqlsrv"
 
       - name: "Install dependencies with Composer"
         uses: "ramsey/composer-install@v2"

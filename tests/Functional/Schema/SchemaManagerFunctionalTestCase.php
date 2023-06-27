@@ -7,6 +7,7 @@ use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Events;
 use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Exception\DatabaseObjectNotFoundException;
+use Doctrine\DBAL\Exception\SyntaxErrorException;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\OraclePlatform;
 use Doctrine\DBAL\Platforms\SqlitePlatform;
@@ -178,7 +179,7 @@ abstract class SchemaManagerFunctionalTestCase extends FunctionalTestCase
 
         try {
             $this->schemaManager->dropSchema('test_create_schema');
-        } catch (DatabaseObjectNotFoundException $e) {
+        } catch (DatabaseObjectNotFoundException | SyntaxErrorException $e) {
         }
 
         self::assertNotContains('test_create_schema', $this->schemaManager->listSchemaNames());

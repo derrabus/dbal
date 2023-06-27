@@ -237,6 +237,11 @@ class TestUtil
         return in_array(self::getConnectionParams()['driver'], $names, true);
     }
 
+    public static function isOdbcDriver(): bool
+    {
+        return self::isDriverOneOf('odbc_sqlsrv');
+    }
+
     /**
      * Generates a query that will return the given rows without the need to create a temporary table.
      *

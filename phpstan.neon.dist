@@ -134,6 +134,7 @@ parameters:
         - '~^Parameter #1 \$row of method Doctrine\\DBAL\\Driver\\PgSQL\\Result\:\:mapNumericRow\(\) expects array<int, string\|null>, array<int\|string, string\|null> given\.$~'
 
         # Ignore isset() checks in destructors.
+        - '~^Property Doctrine\\DBAL\\Driver\\ODBC\\Connection\:\:\$connection \(resource\) in isset\(\) is not nullable\.$~'
         - '~^Property Doctrine\\DBAL\\Driver\\PgSQL\\Connection\:\:\$connection \(PgSql\\Connection\|resource\) in isset\(\) is not nullable\.$~'
         - '~^Property Doctrine\\DBAL\\Driver\\PgSQL\\Statement\:\:\$connection \(PgSql\\Connection\|resource\) in isset\(\) is not nullable\.$~'
 
@@ -146,5 +147,12 @@ parameters:
         # Ignore the possible false return value of db2_num_rows().
         - '~^Method Doctrine\\DBAL\\Driver\\IBMDB2\\Connection\:\:exec\(\) should return int but returns int<0, max>\|false\.$~'
         - '~^Method Doctrine\\DBAL\\Driver\\IBMDB2\\Result\:\:rowCount\(\) should return int but returns int<0, max>\|false\.$~'
+
+        # On PHP 7.4, odbc_autocommit() requires the second parameter to be an integer.
+        -
+            message: '~^Parameter #2 \$enable of function odbc_autocommit expects bool, int given\.$~'
+            paths:
+                - src/Driver/ODBC/Connection.php
+
 includes:
     - vendor/phpstan/phpstan-strict-rules/rules.neon

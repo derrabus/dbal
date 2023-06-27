@@ -7,6 +7,7 @@ use Doctrine\DBAL\ConnectionException;
 use Doctrine\DBAL\Driver\Connection as DriverConnection;
 use Doctrine\DBAL\Driver\PDO\Connection as PDOConnection;
 use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Exception\ConstraintViolationException;
 use Doctrine\DBAL\Exception\DriverException;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\ParameterType;
@@ -82,7 +83,13 @@ class ConnectionTest extends FunctionalTestCase
                 $this->connection->insert(self::TABLE, ['id' => 1]);
                 self::fail('Expected exception to be thrown because of the unique constraint.');
             } catch (Throwable $e) {
-                self::assertInstanceOf(UniqueConstraintViolationException::class, $e);
+                if (TestUtil::isOdbcDriver()) {
+                    // ODBC defines a generic error code for all kinds of constraint violations
+                    self::assertInstanceOf(ConstraintViolationException::class, $e);
+                } else {
+                    self::assertInstanceOf(UniqueConstraintViolationException::class, $e);
+                }
+
                 $this->connection->rollBack();
                 self::assertSame(1, $this->connection->getTransactionNestingLevel());
             }
@@ -157,7 +164,13 @@ class ConnectionTest extends FunctionalTestCase
                 $this->connection->insert(self::TABLE, ['id' => 1]);
                 self::fail('Expected exception to be thrown because of the unique constraint.');
             } catch (Throwable $e) {
-                self::assertInstanceOf(UniqueConstraintViolationException::class, $e);
+                if (TestUtil::isOdbcDriver()) {
+                    // ODBC defines a generic error code for all kinds of constraint violations
+                    self::assertInstanceOf(ConstraintViolationException::class, $e);
+                } else {
+                    self::assertInstanceOf(UniqueConstraintViolationException::class, $e);
+                }
+
                 $this->connection->rollBack();
                 self::assertSame(1, $this->connection->getTransactionNestingLevel());
             }
@@ -254,7 +267,13 @@ class ConnectionTest extends FunctionalTestCase
             $this->connection->insert(self::TABLE, ['id' => 1]);
             self::fail('Expected exception to be thrown because of the unique constraint.');
         } catch (Throwable $e) {
-            self::assertInstanceOf(UniqueConstraintViolationException::class, $e);
+            if (TestUtil::isOdbcDriver()) {
+                // ODBC defines a generic error code for all kinds of constraint violations
+                self::assertInstanceOf(ConstraintViolationException::class, $e);
+            } else {
+                self::assertInstanceOf(UniqueConstraintViolationException::class, $e);
+            }
+
             self::assertSame(1, $this->connection->getTransactionNestingLevel());
             $this->connection->rollBack();
             self::assertSame(0, $this->connection->getTransactionNestingLevel());
@@ -282,7 +301,13 @@ class ConnectionTest extends FunctionalTestCase
             });
             self::fail('Expected exception to be thrown because of the unique constraint.');
         } catch (Throwable $e) {
-            self::assertInstanceOf(UniqueConstraintViolationException::class, $e);
+            if (TestUtil::isOdbcDriver()) {
+                // ODBC defines a generic error code for all kinds of constraint violations
+                self::assertInstanceOf(ConstraintViolationException::class, $e);
+            } else {
+                self::assertInstanceOf(UniqueConstraintViolationException::class, $e);
+            }
+
             self::assertSame(0, $this->connection->getTransactionNestingLevel());
         }
     }

@@ -10,7 +10,6 @@ use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Tests\FunctionalTestCase;
 use Doctrine\DBAL\Tests\TestUtil;
 use Doctrine\DBAL\Types\Types;
-use Throwable;
 
 use function array_merge;
 use function chmod;
@@ -39,7 +38,13 @@ class ExceptionTest extends FunctionalTestCase
 
         $this->connection->insert('duplicatekey_table', ['id' => 1]);
 
-        $this->expectException(Exception\UniqueConstraintViolationException::class);
+        if (TestUtil::isOdbcDriver()) {
+            // ODBC defines a generic error code for all kinds of constraint violations
+            $this->expectException(Exception\ConstraintViolationException::class);
+        } else {
+            $this->expectException(Exception\UniqueConstraintViolationException::class);
+        }
+
         $this->connection->insert('duplicatekey_table', ['id' => 1]);
     }
 
@@ -70,27 +75,18 @@ class ExceptionTest extends FunctionalTestCase
         try {
             $this->connection->insert('constraint_error_table', ['id' => 1]);
             $this->connection->insert('owning_table', ['id' => 1, 'constraint_id' => 1]);
-        } catch (Throwable $exception) {
-            $this->tearDownForeignKeyConstraintViolationExceptionTest();
 
-            throw $exception;
-        }
+            if (TestUtil::isOdbcDriver()) {
+                // ODBC defines a generic error code for all kinds of constraint violations
+                $this->expectException(Exception\ConstraintViolationException::class);
+            } else {
+                $this->expectException(Exception\ForeignKeyConstraintViolationException::class);
+            }
 
-        $this->expectException(Exception\ForeignKeyConstraintViolationException::class);
-
-        try {
             $this->connection->insert('owning_table', ['id' => 2, 'constraint_id' => 2]);
-        } catch (Exception\ForeignKeyConstraintViolationException $exception) {
+        } finally {
             $this->tearDownForeignKeyConstraintViolationExceptionTest();
-
-            throw $exception;
-        } catch (Throwable $exception) {
-            $this->tearDownForeignKeyConstraintViolationExceptionTest();
-
-            throw $exception;
         }
-
-        $this->tearDownForeignKeyConstraintViolationExceptionTest();
     }
 
     public function testForeignKeyConstraintViolationExceptionOnUpdate(): void
@@ -100,27 +96,18 @@ class ExceptionTest extends FunctionalTestCase
         try {
             $this->connection->insert('constraint_error_table', ['id' => 1]);
             $this->connection->insert('owning_table', ['id' => 1, 'constraint_id' => 1]);
-        } catch (Throwable $exception) {
-            $this->tearDownForeignKeyConstraintViolationExceptionTest();
 
-            throw $exception;
-        }
+            if (TestUtil::isOdbcDriver()) {
+                // ODBC defines a generic error code for all kinds of constraint violations
+                $this->expectException(Exception\ConstraintViolationException::class);
+            } else {
+                $this->expectException(Exception\ForeignKeyConstraintViolationException::class);
+            }
 
-        $this->expectException(Exception\ForeignKeyConstraintViolationException::class);
-
-        try {
             $this->connection->update('constraint_error_table', ['id' => 2], ['id' => 1]);
-        } catch (Exception\ForeignKeyConstraintViolationException $exception) {
+        } finally {
             $this->tearDownForeignKeyConstraintViolationExceptionTest();
-
-            throw $exception;
-        } catch (Throwable $exception) {
-            $this->tearDownForeignKeyConstraintViolationExceptionTest();
-
-            throw $exception;
         }
-
-        $this->tearDownForeignKeyConstraintViolationExceptionTest();
     }
 
     public function testForeignKeyConstraintViolationExceptionOnDelete(): void
@@ -130,27 +117,18 @@ class ExceptionTest extends FunctionalTestCase
         try {
             $this->connection->insert('constraint_error_table', ['id' => 1]);
             $this->connection->insert('owning_table', ['id' => 1, 'constraint_id' => 1]);
-        } catch (Throwable $exception) {
-            $this->tearDownForeignKeyConstraintViolationExceptionTest();
 
-            throw $exception;
-        }
+            if (TestUtil::isOdbcDriver()) {
+                // ODBC defines a generic error code for all kinds of constraint violations
+                $this->expectException(Exception\ConstraintViolationException::class);
+            } else {
+                $this->expectException(Exception\ForeignKeyConstraintViolationException::class);
+            }
 
-        $this->expectException(Exception\ForeignKeyConstraintViolationException::class);
-
-        try {
             $this->connection->delete('constraint_error_table', ['id' => 1]);
-        } catch (Exception\ForeignKeyConstraintViolationException $exception) {
+        } finally {
             $this->tearDownForeignKeyConstraintViolationExceptionTest();
-
-            throw $exception;
-        } catch (Throwable $exception) {
-            $this->tearDownForeignKeyConstraintViolationExceptionTest();
-
-            throw $exception;
         }
-
-        $this->tearDownForeignKeyConstraintViolationExceptionTest();
     }
 
     public function testForeignKeyConstraintViolationExceptionOnTruncate(): void
@@ -162,27 +140,18 @@ class ExceptionTest extends FunctionalTestCase
         try {
             $this->connection->insert('constraint_error_table', ['id' => 1]);
             $this->connection->insert('owning_table', ['id' => 1, 'constraint_id' => 1]);
-        } catch (Throwable $exception) {
-            $this->tearDownForeignKeyConstraintViolationExceptionTest();
 
-            throw $exception;
-        }
+            if (TestUtil::isOdbcDriver()) {
+                // ODBC reports this as "Syntax error or access violation"
+                $this->expectException(Exception\SyntaxErrorException::class);
+            } else {
+                $this->expectException(Exception\ForeignKeyConstraintViolationException::class);
+            }
 
-        $this->expectException(Exception\ForeignKeyConstraintViolationException::class);
-
-        try {
             $this->connection->executeStatement($platform->getTruncateTableSQL('constraint_error_table'));
-        } catch (Exception\ForeignKeyConstraintViolationException $exception) {
+        } finally {
             $this->tearDownForeignKeyConstraintViolationExceptionTest();
-
-            throw $exception;
-        } catch (Throwable $exception) {
-            $this->tearDownForeignKeyConstraintViolationExceptionTest();
-
-            throw $exception;
         }
-
-        $this->tearDownForeignKeyConstraintViolationExceptionTest();
     }
 
     public function testNotNullConstraintViolationException(): void
@@ -193,7 +162,13 @@ class ExceptionTest extends FunctionalTestCase
         $table->setPrimaryKey(['id']);
         $this->dropAndCreateTable($table);
 
-        $this->expectException(Exception\NotNullConstraintViolationException::class);
+        if (TestUtil::isOdbcDriver()) {
+            // ODBC defines a generic error code for all kinds of constraint violations
+            $this->expectException(Exception\ConstraintViolationException::class);
+        } else {
+            $this->expectException(Exception\NotNullConstraintViolationException::class);
+        }
+
         $this->connection->insert('notnull_table', ['id' => 1, 'val' => null]);
     }
 
@@ -206,7 +181,13 @@ class ExceptionTest extends FunctionalTestCase
         // prevent the PHPUnit error handler from handling the warning that db2_bind_param() may trigger
         $this->iniSet('error_reporting', (string) (E_ALL & ~E_WARNING));
 
-        $this->expectException(Exception\InvalidFieldNameException::class);
+        if (TestUtil::isOdbcDriver()) {
+            // ODBC does not report this error as fine-grained as we need it.
+            $this->expectException(Exception\DatabaseObjectNotFoundException::class);
+        } else {
+            $this->expectException(Exception\InvalidFieldNameException::class);
+        }
+
         $this->connection->insert('bad_columnname_table', ['name' => 5]);
     }
 
@@ -221,7 +202,13 @@ class ExceptionTest extends FunctionalTestCase
         $this->dropAndCreateTable($table2);
 
         $sql = 'SELECT id FROM ambiguous_list_table_1, ambiguous_list_table_2';
-        $this->expectException(Exception\NonUniqueFieldNameException::class);
+        if (TestUtil::isOdbcDriver()) {
+            // ODBC reports this as "Syntax error or access violation".
+            $this->expectException(Exception\SyntaxErrorException::class);
+        } else {
+            $this->expectException(Exception\NonUniqueFieldNameException::class);
+        }
+
         $this->connection->executeQuery($sql);
     }
 
@@ -234,7 +221,14 @@ class ExceptionTest extends FunctionalTestCase
         $this->dropAndCreateTable($table);
 
         $this->connection->insert('unique_column_table', ['id' => 5]);
-        $this->expectException(Exception\UniqueConstraintViolationException::class);
+
+        if (TestUtil::isOdbcDriver()) {
+            // ODBC defines a generic error code for all kinds of constraint violations
+            $this->expectException(Exception\ConstraintViolationException::class);
+        } else {
+            $this->expectException(Exception\UniqueConstraintViolationException::class);
+        }
+
         $this->connection->insert('unique_column_table', ['id' => 5]);
     }
 
