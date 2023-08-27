@@ -87,6 +87,7 @@ final class DriverManager
         'oci8'               => OCI8\Driver::class,
         'odbc'               => ODBC\Driver::class,
         'odbc_sqlsrv'        => ODBC\SQLServer\Driver::class,
+        'odbc_mysql'         => ODBC\MySQL\Driver::class,
         'ibm_db2'            => IBMDB2\Driver::class,
         'pdo_sqlsrv'         => PDO\SQLSrv\Driver::class,
         'mysqli'             => Mysqli\Driver::class,

@@ -7,6 +7,7 @@ namespace Doctrine\DBAL\Driver\API\ODBC;
 use Doctrine\DBAL\Driver\API\ExceptionConverter as ExceptionConverterInterface;
 use Doctrine\DBAL\Driver\Exception;
 use Doctrine\DBAL\Exception\ConnectionException;
+use Doctrine\DBAL\Exception\ConnectionLost;
 use Doctrine\DBAL\Exception\ConstraintViolationException;
 use Doctrine\DBAL\Exception\DatabaseObjectNotFoundException;
 use Doctrine\DBAL\Exception\DriverException;
@@ -27,6 +28,8 @@ final class ExceptionConverter implements ExceptionConverterInterface
                 return new ConnectionException($exception, $query);
             case '37000':
                 return new SyntaxErrorException($exception, $query);
+            case '08S01':
+                return new ConnectionLost($exception, $query);
             case 'S0001':
                 return new TableExistsException($exception, $query);
             case 'S0002':
