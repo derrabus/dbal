@@ -43,7 +43,19 @@ final class AbstractDriverMiddlewareTest extends TestCase
             ->method('getDatabasePlatform')
             ->willReturn($platform);
 
-        self::assertSame($platform, $this->createMiddleware($driver)->createDatabasePlatformForVersion('1.2.3'));
+        $middleware = new class ($driver) extends AbstractDriverMiddleware {
+            public bool $overrideHasBeenCalled = false;
+
+            public function getDatabasePlatform(): AbstractPlatform
+            {
+                $this->overrideHasBeenCalled = true;
+
+                return parent::getDatabasePlatform();
+            }
+        };
+
+        self::assertSame($platform, $middleware->createDatabasePlatformForVersion('1.2.3'));
+        self::assertTrue($middleware->overrideHasBeenCalled);
     }
 
     private function createMiddleware(Driver $driver): AbstractDriverMiddleware

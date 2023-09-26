@@ -68,6 +68,6 @@ abstract class AbstractDriverMiddleware implements VersionAwarePlatformDriver
             return $this->wrappedDriver->createDatabasePlatformForVersion($version);
         }
 
-        return $this->wrappedDriver->getDatabasePlatform();
+        return $this->getDatabasePlatform();
     }
 }
