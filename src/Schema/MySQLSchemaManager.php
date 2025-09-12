@@ -174,6 +174,13 @@ class MySQLSchemaManager extends AbstractSchemaManager
                 }
 
                 break;
+
+            case 'vector':
+                if (preg_match('/^vector\((\d+)\)$/', $tableColumn['column_type'], $matches) !== false) {
+                    $length = (int) $matches[1];
+                }
+
+                break;
         }
 
         switch ($dbType) {
