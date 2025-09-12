@@ -10,6 +10,7 @@ use Doctrine\DBAL\Exception\DatabaseRequired;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
+use Doctrine\DBAL\Platforms\MySQL90Platform;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\ColumnEditor;
 use Doctrine\DBAL\Schema\Index;
@@ -798,6 +799,12 @@ SQL;
     {
         $tableEditor = Table::editor()
             ->setUnquotedName('test_column_introspection');
+
+        $types = Type::getTypesMap();
+
+        if (! $this->connection->getDatabasePlatform() instanceof MySQL90Platform) {
+            unset($types[Types::VECTOR]);
+        }
 
         $doctrineTypes = array_keys(Type::getTypesMap());
 

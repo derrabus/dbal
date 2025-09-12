@@ -801,6 +801,7 @@ abstract class AbstractMySQLPlatform extends AbstractPlatform
             'tinytext'   => Types::TEXT,
             'varbinary'  => Types::BINARY,
             'varchar'    => Types::STRING,
+            'vector'     => Types::VECTOR,
             'year'       => Types::DATE_MUTABLE,
         ];
     }
