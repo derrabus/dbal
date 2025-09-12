@@ -806,7 +806,7 @@ SQL;
             unset($types[Types::VECTOR]);
         }
 
-        $doctrineTypes = array_keys(Type::getTypesMap());
+        $doctrineTypes = array_keys($types);
 
         foreach ($doctrineTypes as $type) {
             $columnEditor = Column::editor()
