@@ -23,7 +23,7 @@ class MySQL90PlatformTest extends MySQLPlatformTest
     {
         self::assertSame(
             'VECTOR(1536)',
-            $this->platform->getVectorTypeDeclarationSQL(['dimensions' => 1536]),
+            $this->platform->getVectorTypeDeclarationSQL(['length' => 1536]),
         );
     }
 }

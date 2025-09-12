@@ -14,11 +14,11 @@ class MySQL90Platform extends MySQLPlatform
     #[Override]
     public function getVectorTypeDeclarationSQL(array $column): string
     {
-        $dimensions = '';
-        if (isset($column['dimensions'])) {
-            $dimensions = sprintf('(%d)', $column['dimensions']);
+        $length = '';
+        if (isset($column['length'])) {
+            $length = sprintf('(%d)', $column['length']);
         }
 
-        return 'VECTOR' . $dimensions;
+        return 'VECTOR' . $length;
     }
 }

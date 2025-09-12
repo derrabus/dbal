@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Doctrine\DBAL\Tests\Platforms;
 
+use Doctrine\DBAL\Exception\InvalidColumnType\ColumnLengthRequired;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MariaDB110700Platform;
 
@@ -26,12 +27,13 @@ class MariaDB110700PlatformTest extends MariaDB1052PlatformTest
     {
         self::assertSame(
             'VECTOR(2048)',
-            $this->platform->getVectorTypeDeclarationSQL(['dimensions' => 2048]),
+            $this->platform->getVectorTypeDeclarationSQL(['length' => 2048]),
         );
     }
 
     public function testGetVectorSQLDeclarationWithoutDimensions(): void
     {
-        self::assertSame('VECTOR(1536)', $this->platform->getVectorTypeDeclarationSQL([]));
+        self::expectException(ColumnLengthRequired::class);
+        $this->platform->getVectorTypeDeclarationSQL([]);
     }
 }
