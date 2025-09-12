@@ -31,7 +31,7 @@ class MariaDB110700PlatformTest extends MariaDB1052PlatformTest
         );
     }
 
-    public function testGetVectorSQLDeclarationWithoutDimensions(): void
+    public function testGetVectorTypeDeclarationSQL(): void
     {
         self::expectException(ColumnLengthRequired::class);
         $this->platform->getVectorTypeDeclarationSQL([]);

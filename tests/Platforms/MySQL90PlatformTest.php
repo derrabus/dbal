@@ -4,22 +4,24 @@ declare(strict_types=1);
 
 namespace Doctrine\DBAL\Tests\Platforms;
 
+use Doctrine\DBAL\Exception\InvalidColumnType\ColumnLengthRequired;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MySQL90Platform;
 
-class MySQL90PlatformTest extends MySQLPlatformTest
+class MySQL90PlatformTest extends MySQL84PlatformTest
 {
     public function createPlatform(): AbstractPlatform
     {
         return new MySQL90Platform();
     }
 
-    public function testCreateVectorUnspecifiedDimensions(): void
+    public function testGetVectorSQLDeclarationWithoutDimensions(): void
     {
-        self::assertSame('VECTOR', $this->platform->getVectorTypeDeclarationSQL([]));
+        self::expectException(ColumnLengthRequired::class);
+        $this->platform->getVectorTypeDeclarationSQL([]);
     }
 
-    public function testCreateVectorSpecifiedDimensions(): void
+    public function testGetVectorTypeDeclarationSQL(): void
     {
         self::assertSame(
             'VECTOR(1536)',

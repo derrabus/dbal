@@ -4,18 +4,11 @@ declare(strict_types=1);
 
 namespace Doctrine\DBAL\Platforms;
 
-use function sprintf;
-
-class MySQL90Platform extends MySQLPlatform
+class MySQL90Platform extends MySQL84Platform
 {
-    /** @inheritDoc */
+    /** @inheritdoc */
     public function getVectorTypeDeclarationSQL(array $column): string
     {
-        $length = '';
-        if (isset($column['length'])) {
-            $length = sprintf('(%d)', $column['length']);
-        }
-
-        return 'VECTOR' . $length;
+        return AbstractMySQLPlatform::getVectorTypeDeclarationSQL($column);
     }
 }
