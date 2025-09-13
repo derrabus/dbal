@@ -9,6 +9,7 @@ use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Exception\DatabaseRequired;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
+use Doctrine\DBAL\Platforms\MariaDB110700Platform;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\MySQL90Platform;
 use Doctrine\DBAL\Schema\Column;
@@ -802,7 +803,9 @@ SQL;
 
         $types = Type::getTypesMap();
 
-        if (! $this->connection->getDatabasePlatform() instanceof MySQL90Platform) {
+        $platform = $this->connection->getDatabasePlatform();
+
+        if (! $platform instanceof MySQL90Platform && ! $platform instanceof MariaDB110700Platform) {
             unset($types[Types::VECTOR]);
         }
 
