@@ -156,6 +156,8 @@ final class IndexEditor
             $flags[] = 'fulltext';
         } elseif ($this->type === IndexType::SPATIAL) {
             $flags[] = 'spatial';
+        } elseif ($this->type === IndexType::VECTOR) {
+            $flags[] = 'vector';
         }
 
         if ($this->isClustered) {

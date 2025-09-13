@@ -10,4 +10,5 @@ enum IndexType
     case UNIQUE;
     case FULLTEXT;
     case SPATIAL;
+    case VECTOR;
 }

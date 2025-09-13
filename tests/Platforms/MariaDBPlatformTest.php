@@ -7,6 +7,7 @@ namespace Doctrine\DBAL\Tests\Platforms;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\Exception\NotSupported;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
+use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Types\Types;
 
 class MariaDBPlatformTest extends AbstractMySQLPlatformTestCase
@@ -42,5 +43,17 @@ class MariaDBPlatformTest extends AbstractMySQLPlatformTestCase
     {
         self::expectException(NotSupported::class);
         $this->platform->getVectorTypeDeclarationSQL(['length' => 2048]);
+    }
+
+    public function testGeneratesVectorIndexCreationSql(): void
+    {
+        $indexDef = Index::editor()
+            ->setUnquotedColumnNames('test')
+            ->setUnquotedName('idx_test')
+            ->setType(Index\IndexType::VECTOR)
+            ->create();
+
+        $sql = $this->platform->getCreateIndexSQL($indexDef, 'test_table');
+        self::assertEquals('CREATE VECTOR INDEX idx_test ON test_table (test)', $sql);
     }
 }

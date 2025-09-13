@@ -627,6 +627,11 @@ class Index extends AbstractNamedObject
             $matches[] = 'spatial';
         }
 
+        if ($this->hasFlag('vector')) {
+            $type      = IndexType::VECTOR;
+            $matches[] = 'vector';
+        }
+
         if (count($matches) > 1) {
             Deprecation::trigger(
                 'doctrine/dbal',

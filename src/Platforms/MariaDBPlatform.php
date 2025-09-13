@@ -7,6 +7,7 @@ namespace Doctrine\DBAL\Platforms;
 use Doctrine\DBAL\Platforms\Keywords\KeywordList;
 use Doctrine\DBAL\Platforms\Keywords\MariaDBKeywords;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
+use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\TableDiff;
 use Doctrine\DBAL\Types\JsonType;
 use Doctrine\Deprecations\Deprecation;
@@ -178,5 +179,14 @@ class MariaDBPlatform extends AbstractMySQLPlatform
     public function getVectorTypeDeclarationSQL(array $column): string
     {
         return AbstractPlatform::getVectorTypeDeclarationSQL($column);
+    }
+
+    protected function getCreateIndexSQLFlags(Index $index): string
+    {
+        if ($index->getType() === Index\IndexType::VECTOR) {
+            return 'VECTOR ';
+        }
+
+        return parent::getCreateIndexSQLFlags($index);
     }
 }
